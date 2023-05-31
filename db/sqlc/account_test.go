@@ -2,15 +2,17 @@ package db
 
 import (
 	"context"
+	"github.com/micaelapucciariello/simplebank/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
-func TestCreateAccount(t *testing.T) {
+func createRandomAccount(t *testing.T) Account {
 	args := CreateAccountParams{
-		Owner:    "Marina",
-		Balance:  "100",
-		Currency: "USD",
+		Owner:    utils.RandomOwner(),
+		Balance:  utils.RandomBalance(),
+		Currency: utils.RandomCurrency(),
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), args)
@@ -24,4 +26,76 @@ func TestCreateAccount(t *testing.T) {
 
 	require.NotZero(t, account.CreatedAt)
 	require.NotZero(t, account.ID)
+
+	return account
+}
+
+func TestCreateAccount(t *testing.T) {
+	createRandomAccount(t)
+}
+
+func TestGetAccount(t *testing.T) {
+	a := createRandomAccount(t)
+
+	account, err := testQueries.GetAccount(context.Background(), a.ID)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, account)
+
+	require.Equal(t, a.Owner, account.Owner)
+	require.Equal(t, a.Balance, account.Balance)
+	require.Equal(t, a.Currency, account.Currency)
+	require.Equal(t, a.ID, account.ID)
+
+	require.WithinDuration(t, a.CreatedAt.Time, account.CreatedAt.Time, time.Second)
+}
+
+func TestUpdateAccount(t *testing.T) {
+	a := createRandomAccount(t)
+
+	args := UpdateAccountParams{
+		ID:      a.ID,
+		Balance: utils.RandomBalance(),
+	}
+
+	account, err := testQueries.UpdateAccount(context.Background(), args)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, account)
+
+	require.Equal(t, a.Owner, account.Owner)
+	require.Equal(t, args.Balance, account.Balance)
+	require.Equal(t, a.Currency, account.Currency)
+	require.Equal(t, a.ID, account.ID)
+
+	require.WithinDuration(t, a.CreatedAt.Time, account.CreatedAt.Time, time.Second)
+}
+
+func TestDeleteAccount(t *testing.T) {
+	a := createRandomAccount(t)
+	err := testQueries.DeleteAccount(context.Background(), a.ID)
+	require.NoError(t, err)
+
+	emptyAccount, err := testQueries.GetAccount(context.Background(), a.ID)
+	require.Error(t, err)
+	require.Empty(t, emptyAccount)
+}
+
+func TestGetAccountList(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomAccount(t)
+	}
+
+	args := ListAccountsParams{
+		Limit:  5,
+		Offset: 5,
+	}
+
+	accounts, err := testQueries.ListAccounts(context.Background(), args)
+	require.NoError(t, err)
+	require.Len(t, accounts, 5)
+
+	for _, account := range accounts {
+		require.NotEmpty(t, account)
+	}
 }
