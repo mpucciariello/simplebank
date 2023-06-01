@@ -11,7 +11,7 @@ func TestTxStore(t *testing.T) {
 
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	amount := int64(1000)
+	amount := int64(10)
 
 	n := 5
 	exists := make(map[int]bool)
