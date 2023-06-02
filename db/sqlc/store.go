@@ -25,6 +25,13 @@ type TransferTxResult struct {
 	ToEntry       Entry    `json:"to_entry"`
 }
 
+type BalanceTx struct {
+	AccountID1 int64
+	AccountID2 int64
+	Amount1    int64
+	Amount2    int64
+}
+
 var txKey = struct{}{}
 
 func NewStore(db *sql.DB) *Store {
@@ -95,22 +102,26 @@ func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (Transf
 			return err
 		}
 
-		fmt.Println(txName, "update sender account")
-		result.FromAccountID, err = s.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      params.FromAccountID,
-			Balance: -params.Amount,
-		})
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(txName, "update receiver account")
-		result.ToAccountID, err = s.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      params.ToAccountID,
-			Balance: params.Amount,
-		})
-		if err != nil {
-			return err
+		if params.FromAccountID < params.ToAccountID {
+			result.FromAccountID, result.ToAccountID, err = modifyBalance(ctx, q, BalanceTx{
+				AccountID1: params.FromAccountID,
+				AccountID2: params.ToAccountID,
+				Amount1:    -params.Amount,
+				Amount2:    params.Amount,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			result.ToAccountID, result.FromAccountID, err = modifyBalance(ctx, q, BalanceTx{
+				AccountID1: params.ToAccountID,
+				AccountID2: params.FromAccountID,
+				Amount1:    params.Amount,
+				Amount2:    -params.Amount,
+			})
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -118,5 +129,24 @@ func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (Transf
 	})
 
 	return result, err
+}
 
+func modifyBalance(ctx context.Context, q *Queries, balance BalanceTx) (account1 Account, account2 Account, err error) {
+	account1, err = q.UpdateAccountBalance(ctx, UpdateAccountBalanceParams{
+		Amount: balance.Amount1,
+		ID:     balance.AccountID1,
+	})
+	if err != nil {
+		return
+	}
+
+	account2, err = q.UpdateAccountBalance(ctx, UpdateAccountBalanceParams{
+		Amount: balance.Amount2,
+		ID:     balance.AccountID2,
+	})
+	if err != nil {
+		return
+	}
+
+	return account1, account2, nil
 }

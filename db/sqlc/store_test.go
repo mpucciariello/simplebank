@@ -113,18 +113,78 @@ func TestTxStore(t *testing.T) {
 		require.NotContains(t, exists, z)
 		exists[z] = true
 
+	}
+
+	// check updated accounts
+	updatedFromAccount, err := store.GetAccount(context.Background(), account1.ID)
+	require.NotEmpty(t, updatedFromAccount)
+	require.NoError(t, err)
+
+	updatedToAccount, err := store.GetAccount(context.Background(), account2.ID)
+	require.NotEmpty(t, updatedToAccount)
+	require.NoError(t, err)
+
+	fmt.Println(">> after transfer:", updatedFromAccount.Balance, updatedToAccount.Balance)
+
+	require.Equal(t, account1.Balance-int64(n)*amount, updatedFromAccount.Balance)
+	require.Equal(t, account2.Balance+int64(n)*amount, updatedToAccount.Balance)
+}
+
+func TestTxStoreDeadlock(t *testing.T) {
+	store := NewStore(testDB)
+
+	account1 := createRandomAccount(t)
+	account2 := createRandomAccount(t)
+
+	fmt.Println(">> before transfer:", account1.Balance, account2.Balance)
+	amount := int64(10)
+
+	n := 10 // 5 from account1 to account 2, 5 from account2 to account1
+
+	errs := make(chan error)
+
+	for i := 0; i < n; i++ {
+		trxName := fmt.Sprintf("trx: %d", i+1)
+
+		fromAccountID := account1.ID
+		toAccountID := account2.ID
+
+		if i%2 == 1 {
+			fromAccountID = account2.ID
+			toAccountID = account1.ID
+		}
+		go func() {
+			ctx := context.WithValue(context.Background(), txKey, trxName)
+
+			_, err := store.TransferTx(ctx, TransferTxParams{
+				FromAccountID: fromAccountID,
+				ToAccountID:   toAccountID,
+				Amount:        amount,
+			})
+
+			errs <- err
+		}()
+	}
+
+	//check results
+	// n defines the number of executions
+	for i := 0; i < n; i++ {
+		err := <-errs
+		require.NoError(t, err)
+
 		// check updated accounts
-		updatedFromAccount, err := store.GetAccount(context.Background(), fromAccount.ID)
-		require.NotEmpty(t, updatedFromAccount)
+		updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
+		require.NotEmpty(t, updatedAccount1)
 		require.NoError(t, err)
 
-		updatedToAccount, err := store.GetAccount(context.Background(), toAccount.ID)
-		require.NotEmpty(t, updatedToAccount)
+		updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
+		require.NotEmpty(t, updatedAccount2)
 		require.NoError(t, err)
 
-		fmt.Println(">> after transfer:", updatedFromAccount.Balance, updatedToAccount.Balance)
+		fmt.Println(">> after transfer:", updatedAccount1.Balance, updatedAccount2.Balance)
 
-		require.Equal(t, account1.Balance-int64(z)*amount, updatedFromAccount.Balance)
-		require.Equal(t, account2.Balance+int64(z)*amount, updatedToAccount.Balance)
+		// should be equal since at the end the balance is the same as before testing
+		require.Equal(t, account1.Balance, updatedAccount1.Balance)
+		require.Equal(t, account2.Balance, updatedAccount2.Balance)
 	}
 }
