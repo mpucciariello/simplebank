@@ -7,7 +7,7 @@ import (
 
 // generates random values ir order to avoid register duplication while testing
 
-const alphabet = "qwertyuiopasdfhjklñzxcvbnm"
+const alphabet = "qwertyuiopasdfhjklzxcvbnm"
 
 func randomInt(min, max int64) int64 {
 	return min + rand.Int63n(max-min+1)

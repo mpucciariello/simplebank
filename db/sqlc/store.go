@@ -25,6 +25,8 @@ type TransferTxResult struct {
 	ToEntry       Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 func NewStore(db *sql.DB) *Store {
 	return &Store{
 		db:      db,
@@ -58,8 +60,11 @@ func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
+	txName := ctx.Value(txKey)
+
 	err := s.execTx(ctx, func(q *Queries) error {
 		var err error
+		fmt.Println(txName, "create transfer")
 		result.Transfer, err = s.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: params.FromAccountID,
 			ToAccountID:   params.ToAccountID,
@@ -70,6 +75,7 @@ func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (Transf
 			return err
 		}
 
+		fmt.Println(txName, "create first entry")
 		result.FromEntry, err = s.CreateEntry(ctx, CreateEntryParams{
 			Amount:    -params.Amount,
 			AccountID: params.FromAccountID,
@@ -79,6 +85,7 @@ func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (Transf
 			return err
 		}
 
+		fmt.Println(txName, "create second entry")
 		result.ToEntry, err = s.CreateEntry(ctx, CreateEntryParams{
 			Amount:    params.Amount,
 			AccountID: params.ToAccountID,
@@ -88,28 +95,19 @@ func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (Transf
 			return err
 		}
 
-		// update balance
-		account1, err := s.GetAccountForUpdate(ctx, params.FromAccountID)
-		if err != nil {
-			return err
-		}
-
+		fmt.Println(txName, "update sender account")
 		result.FromAccountID, err = s.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      account1.ID,
-			Balance: account1.Balance - params.Amount,
+			ID:      params.FromAccountID,
+			Balance: -params.Amount,
 		})
 		if err != nil {
 			return err
 		}
 
-		account2, err := s.GetAccountForUpdate(ctx, params.ToAccountID)
-		if err != nil {
-			return err
-		}
-
+		fmt.Println(txName, "update receiver account")
 		result.ToAccountID, err = s.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      account2.ID,
-			Balance: account2.Balance + params.Amount,
+			ID:      params.ToAccountID,
+			Balance: params.Amount,
 		})
 		if err != nil {
 			return err
