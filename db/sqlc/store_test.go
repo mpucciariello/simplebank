@@ -16,7 +16,7 @@ func TestTxStore(t *testing.T) {
 	fmt.Println(">> before transfer:", account1.Balance, account2.Balance)
 	amount := int64(10)
 
-	n := 2
+	n := 10
 	exists := make(map[int]bool)
 
 	errs := make(chan error) // channels allow goroutines to communicate. connects concurrent goroutines.
@@ -171,20 +171,20 @@ func TestTxStoreDeadlock(t *testing.T) {
 	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
-
-		// check updated accounts
-		updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
-		require.NotEmpty(t, updatedAccount1)
-		require.NoError(t, err)
-
-		updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
-		require.NotEmpty(t, updatedAccount2)
-		require.NoError(t, err)
-
-		fmt.Println(">> after transfer:", updatedAccount1.Balance, updatedAccount2.Balance)
-
-		// should be equal since at the end the balance is the same as before testing
-		require.Equal(t, account1.Balance, updatedAccount1.Balance)
-		require.Equal(t, account2.Balance, updatedAccount2.Balance)
 	}
+
+	// check updated accounts
+	updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	require.NotEmpty(t, updatedAccount1)
+	require.NoError(t, err)
+
+	updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	require.NotEmpty(t, updatedAccount2)
+	require.NoError(t, err)
+
+	fmt.Println(">> after transfer:", updatedAccount1.Balance, updatedAccount2.Balance)
+
+	// should be equal since at the end the balance is the same as before testing
+	require.Equal(t, account1.Balance, updatedAccount1.Balance)
+	require.Equal(t, account2.Balance, updatedAccount2.Balance)
 }

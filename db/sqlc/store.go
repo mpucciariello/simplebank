@@ -6,31 +6,30 @@ import (
 	"fmt"
 )
 
-type Store struct {
-	db *sql.DB
-	*Queries
-}
-
-type TransferTxParams struct {
-	FromAccountID int64 `json:"from_account_id"`
-	ToAccountID   int64 `json:"to_account_id"`
-	Amount        int64 `json:"amount"`
-}
-
-type TransferTxResult struct {
-	Transfer      Transfer `json:"transfer"`
-	FromAccountID Account  `json:"from_account_id"`
-	ToAccountID   Account  `json:"to_account_id"`
-	FromEntry     Entry    `json:"from_entry"`
-	ToEntry       Entry    `json:"to_entry"`
-}
-
-type BalanceTx struct {
-	AccountID1 int64
-	AccountID2 int64
-	Amount1    int64
-	Amount2    int64
-}
+type (
+	Store struct {
+		db *sql.DB
+		*Queries
+	}
+	TransferTxParams struct {
+		FromAccountID int64 `json:"from_account_id"`
+		ToAccountID   int64 `json:"to_account_id"`
+		Amount        int64 `json:"amount"`
+	}
+	TransferTxResult struct {
+		Transfer      Transfer `json:"transfer"`
+		FromAccountID Account  `json:"from_account_id"`
+		ToAccountID   Account  `json:"to_account_id"`
+		FromEntry     Entry    `json:"from_entry"`
+		ToEntry       Entry    `json:"to_entry"`
+	}
+	BalanceTx struct {
+		AccountID1 int64
+		AccountID2 int64
+		Amount1    int64
+		Amount2    int64
+	}
+)
 
 var txKey = struct{}{}
 
