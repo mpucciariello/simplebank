@@ -29,6 +29,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	// declares the api routes and its functions
 	router.POST("/accounts", s.createAccount)
 	router.GET("/accounts/:id", s.getAccount)
+	router.GET("/accounts", s.getAccountsList)
 }
 
 // errResponse returns a gin key-value error
