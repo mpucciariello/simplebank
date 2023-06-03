@@ -30,6 +30,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	router.POST("/accounts", s.createAccount)
 	router.GET("/accounts/:id", s.getAccount)
 	router.GET("/accounts", s.getAccountsList)
+	router.DELETE("/accounts/:id", s.deleteAccount)
 }
 
 // errResponse returns a gin key-value error
