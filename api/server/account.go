@@ -1,6 +1,7 @@
-package server
+package api
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"net/http"
@@ -9,6 +10,10 @@ import (
 type createAccountReq struct {
 	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required" oneof:"USD, EUR, ARS"`
+}
+
+type getAccountReq struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
 func (s *Server) createAccount(ctx *gin.Context) {
@@ -27,9 +32,25 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	account, err := s.store.CreateAccount(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
-		return
+	} else {
+		ctx.JSON(http.StatusOK, account)
+	}
+}
+
+func (s *Server) getAccount(ctx *gin.Context) {
+	var req getAccountReq
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
 	}
 
-	ctx.JSON(http.StatusOK, account)
+	account, err := s.store.GetAccount(ctx, req.ID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errResponse(err))
+		}
 
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+	} else {
+		ctx.JSON(http.StatusOK, account)
+	}
 }

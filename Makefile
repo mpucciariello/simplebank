@@ -13,11 +13,16 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
 
+format:
+	go fmt ./...
+
 sqlc:
 	sqlc generate
 
 test:
 	go test -v -cover ./...
 
+server:
+	go run main.go
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test
+.PHONY: postgres createdb dropdb migrateup migratedown format sqlc test server

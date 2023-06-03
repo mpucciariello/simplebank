@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"github.com/gin-gonic/gin"
@@ -10,20 +10,25 @@ type Server struct {
 	router *gin.Engine
 }
 
-func New(store *db.Store) *Server {
-	server := &Server{
-		store:  store,
-		router: gin.Default(),
-	}
+func New(store *db.Store) (server *Server) {
+	server = &Server{store: store}
 
-	// receives the createAccount function
-	server.router.POST("/accounts", server.createAccount)
-	return server
+	router := gin.Default()
+	server.initRouter(router)
+
+	server.router = router
+	return
 }
 
 // Start runs the server in the specified address
 func (s *Server) Start(address string) error {
 	return s.router.Run(address)
+}
+
+func (s *Server) initRouter(router *gin.Engine) {
+	// declares the api routes and its functions
+	router.POST("/accounts", s.createAccount)
+	router.GET("/accounts/:id", s.getAccount)
 }
 
 // errResponse returns a gin key-value error
