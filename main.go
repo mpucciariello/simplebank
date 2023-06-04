@@ -14,7 +14,7 @@ import (
 func main() {
 	cfg, err := utils.LoadConfig(".")
 	if err != nil {
-		log.Fatal("cannot get config")
+		log.Fatal("cannot get config: ", err)
 	}
 
 	conn, err := sql.Open(cfg.DriverName, cfg.SourceName)

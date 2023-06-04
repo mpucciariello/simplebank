@@ -4,8 +4,8 @@ import "github.com/spf13/viper"
 
 // Config these values are read by viper from the app.env configuration file
 type Config struct {
-	DriverName    string `mapstructure:"DRIVER_NAME"`
-	SourceName    string `mapstructure:"SOURCE_NAME"`
+	DriverName    string `mapstructure:"DB_DRIVER"`
+	SourceName    string `mapstructure:"DB_SOURCE"`
 	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
 }
 
