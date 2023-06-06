@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	api "github.com/micaelapucciariello/simplebank/api/server"
+	"github.com/micaelapucciariello/simplebank/api"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"log"

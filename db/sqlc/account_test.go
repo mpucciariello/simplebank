@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func createRandomAccount(t *testing.T) Account {
+func CreateRandomAccount(t *testing.T) Account {
 	args := CreateAccountParams{
 		Owner:    utils.RandomOwner(),
 		Balance:  utils.RandomBalance(),
@@ -31,11 +31,11 @@ func createRandomAccount(t *testing.T) Account {
 }
 
 func TestCreateAccount(t *testing.T) {
-	createRandomAccount(t)
+	CreateRandomAccount(t)
 }
 
 func TestGetAccount(t *testing.T) {
-	a := createRandomAccount(t)
+	a := CreateRandomAccount(t)
 
 	account, err := testQueries.GetAccount(context.Background(), a.ID)
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	a := createRandomAccount(t)
+	a := CreateRandomAccount(t)
 
 	args := UpdateAccountParams{
 		ID:      a.ID,
@@ -72,7 +72,7 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
-	a := createRandomAccount(t)
+	a := CreateRandomAccount(t)
 	err := testQueries.DeleteAccount(context.Background(), a.ID)
 	require.NoError(t, err)
 
@@ -83,7 +83,7 @@ func TestDeleteAccount(t *testing.T) {
 
 func TestGetAccountList(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		createRandomAccount(t)
+		CreateRandomAccount(t)
 	}
 
 	args := ListAccountsParams{

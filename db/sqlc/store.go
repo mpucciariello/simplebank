@@ -6,8 +6,13 @@ import (
 	"fmt"
 )
 
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, params TransferTxParams) (TransferTxResult, error)
+}
+
 type (
-	Store struct {
+	SQLStore struct {
 		db *sql.DB
 		*Queries
 	}
@@ -33,15 +38,15 @@ type (
 
 var txKey = struct{}{}
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
 // execTx receives a function as a parameter and executes it within the database transaction
-func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (s *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := s.db.BeginTx(ctx, nil) //the second parameter of the function defines the level of isolation. nil equals to the default value
 	if err != nil {
 		return err
@@ -63,7 +68,7 @@ func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 
 // TransferTx executes a query performing all the necessary db transactions involved in a transfer
 // It creates the transfer register, creates the account entries and updates the balance in both accounts within a single database transaction
-func (s *Store) TransferTx(ctx context.Context, params TransferTxParams) (TransferTxResult, error) {
+func (s *SQLStore) TransferTx(ctx context.Context, params TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	txName := ctx.Value(txKey)

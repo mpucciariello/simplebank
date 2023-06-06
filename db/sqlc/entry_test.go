@@ -10,7 +10,7 @@ import (
 
 func createRandomEntry(t *testing.T) Entry {
 	args := CreateEntryParams{
-		AccountID: createRandomAccount(t).ID,
+		AccountID: CreateRandomAccount(t).ID,
 		Amount:    utils.RandomBalance(),
 	}
 
