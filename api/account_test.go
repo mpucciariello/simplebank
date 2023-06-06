@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/mock/gomock"
@@ -16,7 +17,7 @@ import (
 	"github.com/micaelapucciariello/simplebank/utils"
 )
 
-func TestAccountsAPI(t *testing.T) {
+func TestGetAccountsAPI(t *testing.T) {
 	account := randomAccount()
 
 	testCases := []struct {
@@ -38,6 +39,34 @@ func TestAccountsAPI(t *testing.T) {
 				// check response
 				require.Equal(t, http.StatusOK, recorder.Code)
 				validateResponseAccount(t, recorder.Body, account)
+			},
+		},
+		{
+			name:      "account not found",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(db.Account{}, sql.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name:      "internal server error",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(db.Account{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
 	}
