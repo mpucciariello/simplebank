@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	cfg, err := utils.LoadConfig(".")
+	cfg, err := utils.LoadConfig("")
 	if err != nil {
 		log.Fatal("cannot get config: ", err)
 	}

@@ -1,8 +1,10 @@
 package utils
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
-// Config these values are read by viper from the app.env configuration file
+// Config these values are read by viper from the config.env configuration file
 type Config struct {
 	DriverName    string `mapstructure:"DB_DRIVER"`
 	SourceName    string `mapstructure:"DB_SOURCE"`
@@ -11,7 +13,7 @@ type Config struct {
 
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigFile("app")
+	viper.SetConfigFile("config.env")
 	viper.SetConfigType("env")
 
 	// checks if variables exists and loads them into viper
