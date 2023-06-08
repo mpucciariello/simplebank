@@ -20,11 +20,11 @@ type (
 func (s *Server) createTranfer(ctx *gin.Context) {
 	var req createTransferReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		// gin converts key-value error into a json
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
 	}
 
-	if !s.validCurrency(ctx, req.ToAccountID, req.Currency) || !s.validCurrency(ctx, req.FromAccountID, req.Currency) {
+	if !s.validAccountCurrency(ctx, req.ToAccountID, req.Currency) || !s.validAccountCurrency(ctx, req.FromAccountID, req.Currency) {
 		return
 	}
 	arg := db.TransferTxParams{
@@ -43,7 +43,7 @@ func (s *Server) createTranfer(ctx *gin.Context) {
 	}
 }
 
-func (s *Server) validCurrency(ctx *gin.Context, accountID int64, currency string) bool {
+func (s *Server) validAccountCurrency(ctx *gin.Context, accountID int64, currency string) bool {
 	account, err := s.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err != nil {

@@ -6,11 +6,9 @@ import (
 )
 
 // build a validator to test different currencies in a more scalable way
-
 var validCurrency validator.Func = func(fieldLevel validator.FieldLevel) bool {
-	currency, ok := fieldLevel.Field().Interface().(string)
-	if ok {
-		utils.IsSupported(currency)
+	if currency, ok := fieldLevel.Field().Interface().(string); ok {
+		return utils.IsSupported(currency)
 	}
 	return false
 }

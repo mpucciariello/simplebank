@@ -7,8 +7,8 @@ const (
 )
 
 // IsSupported returns true if the currency is supported
-func IsSupported(c string) bool {
-	switch c {
+func IsSupported(currency string) bool {
+	switch currency {
 	case USD, ARS, EUR:
 		return true
 	}
