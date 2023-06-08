@@ -11,16 +11,11 @@ import (
 )
 
 func main() {
-	//cfg, err := utils.LoadConfig(".")
-	//if err != nil {
-	//	log.Fatal("cannot get config: ", err)
-	//}
-
-	driverName := "postgres"
-	sourceName := "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
-	serverAddress := "0.0.0.0:8080"
-
-	conn, err := sql.Open(driverName, sourceName)
+	cfg, err := utils.LoadConfig("")
+	if err != nil {
+		log.Fatal("cannot get config: ", err)
+	}
+  conn, err := sql.Open(driverName, sourceName)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("cannot connect to db: %s", err))
 	}
