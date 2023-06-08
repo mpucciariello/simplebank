@@ -17,6 +17,7 @@ import (
 	"github.com/micaelapucciariello/simplebank/utils"
 )
 
+
 func TestGetAccountAPI(t *testing.T) {
 	account := randomAccount()
 
@@ -95,6 +96,7 @@ func TestGetAccountAPI(t *testing.T) {
 
 			recorder := httptest.NewRecorder()
 			server := NewServer(store)
+
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
 
