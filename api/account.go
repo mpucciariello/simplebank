@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"net/http"
 )
@@ -10,7 +11,7 @@ import (
 type (
 	createAccountReq struct {
 		Owner    string `json:"owner" binding:"required"`
-		Currency string `json:"currency" binding:"required" oneof:"USD, EUR, ARS"`
+		Currency string `json:"currency" binding:"required,currency"`
 	}
 
 	getAccountReq struct {
@@ -42,6 +43,13 @@ func (s *Server) createAccount(ctx *gin.Context) {
 
 	account, err := s.store.CreateAccount(ctx, arg)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation", "unique_violation":
+				ctx.JSON(http.StatusForbidden, errResponse(err))
+			}
+
+		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
 		ctx.JSON(http.StatusOK, account)
@@ -52,14 +60,15 @@ func (s *Server) getAccount(ctx *gin.Context) {
 	var req getAccountReq
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
 	}
 
 	account, err := s.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
+			return
 		}
-
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
 		ctx.JSON(http.StatusOK, account)
@@ -71,6 +80,7 @@ func (s *Server) getAccountsList(ctx *gin.Context) {
 	var req getAccountsListReq
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
 	}
 
 	params := db.ListAccountsParams{
@@ -90,6 +100,7 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 	var req deleteAccountReq
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
 	}
 
 	err := s.store.DeleteAccount(ctx, req.ID)

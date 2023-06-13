@@ -12,11 +12,10 @@ import (
 )
 
 func main() {
-	cfg, err := utils.LoadConfig(".")
+	cfg, err := utils.LoadConfig("")
 	if err != nil {
 		log.Fatal("cannot get config: ", err)
 	}
-
 	conn, err := sql.Open(cfg.DriverName, cfg.SourceName)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("cannot connect to db: %s", err))
