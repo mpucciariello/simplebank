@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/micaelapucciariello/simplebank/api"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
+	"github.com/micaelapucciariello/simplebank/utils"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -15,7 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot get config: ", err)
 	}
-  conn, err := sql.Open(driverName, sourceName)
+	conn, err := sql.Open(cfg.DriverName, cfg.SourceName)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("cannot connect to db: %s", err))
 	}
@@ -23,7 +24,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(cfg.ServerAddress)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("cannot start server: %s", err))
 	}

@@ -35,6 +35,7 @@ type User struct {
 	Username          string       `json:"username"`
 	HashedPassword    string       `json:"hashed_password"`
 	FullName          string       `json:"full_name"`
+	Email             string       `json:"email"`
 	PasswordChangedAt string       `json:"password_changed_at"`
 	CreatedAt         sql.NullTime `json:"created_at"`
 }
