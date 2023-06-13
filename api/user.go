@@ -17,6 +17,12 @@ type (
 		Email    string `json:"email" binding:"required,email"`
 	}
 
+	createUserRsp struct {
+		Username string `json:"username"`
+		FullName string `json:"full_name"`
+		Email    string `json:"email"`
+	}
+
 	getUserReq struct {
 		Username string `uri:"username" binding:"required,alphanum"`
 	}
@@ -56,7 +62,12 @@ func (s *Server) createUser(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		rsp := createUserRsp{
+			Username: user.Username,
+			FullName: user.FullName,
+			Email:    user.Email,
+		}
+		ctx.JSON(http.StatusOK, rsp)
 	}
 }
 
@@ -75,7 +86,12 @@ func (s *Server) getUser(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
-		ctx.JSON(http.StatusOK, user)
+		rsp := createUserRsp{
+			Username: user.Username,
+			FullName: user.FullName,
+			Email:    user.Email,
+		}
+		ctx.JSON(http.StatusOK, rsp)
 	}
 }
 
