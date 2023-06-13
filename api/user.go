@@ -95,17 +95,17 @@ func (s *Server) getUser(ctx *gin.Context) {
 	}
 }
 
-func (s *Server) deleteUser(ctx *gin.Context) {
-	var req deleteUserReq
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errResponse(err))
-		return
-	}
-
-	err := s.store.DeleteUser(ctx, req.Username)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errResponse(err))
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{"user": req.Username})
-	}
-}
+//func (s *Server) deleteUser(ctx *gin.Context) {
+//	var req deleteUserReq
+//	if err := ctx.ShouldBindUri(&req); err != nil {
+//		ctx.JSON(http.StatusBadRequest, errResponse(err))
+//		return
+//	}
+//
+//	err := s.store.DeleteUser(ctx, req.Username)
+//	if err != nil {
+//		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+//	} else {
+//		ctx.JSON(http.StatusOK, gin.H{"user": req.Username})
+//	}
+//}
