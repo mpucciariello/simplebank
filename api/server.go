@@ -42,6 +42,8 @@ func (s *Server) initRouter(router *gin.Engine) {
 	router.DELETE("/accounts/:id", s.deleteAccount)
 
 	router.POST("/transfers", s.createTranfer)
+
+	router.POST("/users", s.createUser)
 }
 
 // errResponse returns a gin key-value error
