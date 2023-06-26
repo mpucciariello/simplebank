@@ -3,7 +3,7 @@ package token
 import (
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"time"
 )
 
@@ -32,5 +32,27 @@ func (maker *JWTMaker) CreateToken(username string, duration time.Duration) (str
 }
 
 func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
-	panic("implement me")
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, ErrInvalidToken
+		}
+		return []byte(maker.secretKey), nil
+	}
+
+	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
+	if err != nil {
+		// json validator error
+		verr, ok := err.(*jwt.ValidationError)
+		if ok && errors.Is(verr.Inner, jwt.ErrTokenExpired) {
+			return nil, ErrExpiredToken
+		}
+		return nil, ErrInvalidToken
+	}
+
+	payload, ok := jwtToken.Claims.(*Payload)
+	if !ok {
+		return nil, ErrInvalidToken
+	}
+	return payload, nil
 }

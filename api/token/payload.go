@@ -2,46 +2,18 @@ package token
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"time"
 )
+
+var ErrExpiredToken = errors.New("token is expired")
+var ErrInvalidToken = errors.New("token is invalid")
 
 type Payload struct {
 	ID        uuid.UUID `json:"id"`
 	UserName  string    `json:"user_name"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiredAt time.Time `json:"expired_at"`
-}
-
-func (p Payload) GetExpirationTime() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p Payload) GetIssuedAt() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p Payload) GetNotBefore() (*jwt.NumericDate, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p Payload) GetIssuer() (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p Payload) GetSubject() (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p Payload) GetAudience() (jwt.ClaimStrings, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func NewPayload(username string, duration time.Duration) (*Payload, error) {
@@ -58,4 +30,11 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	}
 
 	return &payload, nil
+}
+
+func (p Payload) Valid() error {
+	if time.Now().After(p.ExpiredAt) {
+		return ErrExpiredToken
+	}
+	return nil
 }
