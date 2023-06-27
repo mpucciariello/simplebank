@@ -1,31 +1,42 @@
 package client
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/micaelapucciariello/simplebank/api/token"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
+	"github.com/micaelapucciariello/simplebank/utils"
 )
 
 type Server struct {
 	store  db.Store
 	router *gin.Engine
+	token  token.Maker
+	config utils.Config
 }
 
-func NewServer(store db.Store) (server *Server) {
-	server = &Server{store: store}
+func NewServer(config utils.Config, store db.Store) (server *Server, err error) {
 	router := gin.Default()
+	token, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token validator: %w", err)
+	}
+
+	server = &Server{store: store, token: token, config: config}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("currency", validCurrency)
+		err = v.RegisterValidation("currency", validCurrency)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 	}
 
 	server.initRouter(router)
 
 	server.router = router
+
 	return
 }
 
@@ -44,6 +55,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	router.POST("/transfers", s.createTranfer)
 
 	router.POST("/users", s.createUser)
+	router.POST("/users/login", s.loginUser)
 }
 
 // errResponse returns a gin key-value error
