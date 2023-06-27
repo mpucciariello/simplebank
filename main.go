@@ -22,7 +22,10 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	server := client.NewServer(store)
+	server, err := client.NewServer(cfg, store)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("cannot initiate server: %s", err))
+	}
 
 	err = server.Start(cfg.ServerAddress)
 	if err != nil {

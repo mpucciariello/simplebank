@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/locales/currency"
 	"github.com/golang/mock/gomock"
+	"github.com/micaelapucciariello/simplebank/utils"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
@@ -16,13 +18,30 @@ import (
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 )
 
+const _amount = 112
+
 func TestCreateTransferAPI(t *testing.T) {
 	account1 := randomAccount()
 	account2 := randomAccount()
-	transfer := db.Transfer{
-		FromAccountID: account1.ID,
-		ToAccountID:   account2.ID,
-		Amount:        112,
+	transfer := db.TransferTxResult{
+		Transfer: db.Transfer{
+			ID:            utils.RandomInt(1, 1000),
+			FromAccountID: account1.ID,
+			ToAccountID:   account2.ID,
+			Amount:        _amount,
+		},
+		FromAccountID: account1,
+		ToAccountID:   account2,
+		FromEntry: db.Entry{
+			ID:        utils.RandomInt(1, 1000),
+			Amount:    -_amount,
+			AccountID: account1.ID,
+		},
+		ToEntry: db.Entry{
+			ID:        utils.RandomInt(1, 1000),
+			Amount:    _amount,
+			AccountID: account2.ID,
+		},
 	}
 
 	testCases := []struct {
@@ -33,11 +52,12 @@ func TestCreateTransferAPI(t *testing.T) {
 		{
 			name: "happy path create transfer",
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateTransfer(gomock.Any(), gomock.Eq(db.CreateTransferParams{
+				arg := db.TransferTxParams{
 					FromAccountID: account1.ID,
 					ToAccountID:   account2.ID,
 					Amount:        112,
-				})).
+				}
+				store.EXPECT().TransferTx(gomock.Any(), arg).
 					Times(1).
 					Return(transfer, nil)
 			},
@@ -50,13 +70,9 @@ func TestCreateTransferAPI(t *testing.T) {
 		{
 			name: "internal server error",
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateTransfer(gomock.Any(), gomock.Eq(db.CreateTransferParams{
-					FromAccountID: account1.ID,
-					ToAccountID:   account2.ID,
-					Amount:        112,
-				})).
+				store.EXPECT().TransferTx(gomock.Any(), gomock.Eq(db.TransferTxParams{})).
 					Times(1).
-					Return(db.Transfer{}, sql.ErrConnDone)
+					Return(db.TransferTxResult{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check response
@@ -75,11 +91,11 @@ func TestCreateTransferAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			recorder := httptest.NewRecorder()
-			server := NewServer(store)
+			server := newTestServer(t, store)
 
 			url := fmt.Sprintf("/transfers")
 
-			body := fmt.Sprintf(`{"from_account_id": "%v", "to_account_id": "%v", "amount": %v}`, account1.ID, account2.ID, 112)
+			body := fmt.Sprintf(`{"from_account_id": "%v", "to_account_id": "%v", "amount": %v, "currency": %v"}`, account1.ID, account2.ID, _amount, currency.USD)
 			jsonBody := []byte(body)
 			bodyReader := bytes.NewReader(jsonBody)
 
@@ -93,12 +109,12 @@ func TestCreateTransferAPI(t *testing.T) {
 	}
 }
 
-func validateResponseTransfer(t *testing.T, body *bytes.Buffer, acc db.Transfer) {
+func validateResponseTransfer(t *testing.T, body *bytes.Buffer, trxr db.TransferTxResult) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 
-	var rspTransfer db.Transfer
+	var rspTransfer db.TransferTxResult
 	err = json.Unmarshal(data, &rspTransfer)
 	require.NoError(t, err)
-	require.Equal(t, acc, rspTransfer)
+	require.Equal(t, trxr, rspTransfer)
 }

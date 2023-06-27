@@ -88,7 +88,7 @@ func TestGetUserAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			recorder := httptest.NewRecorder()
-			server := NewServer(store)
+			server := newTestServer(t, store)
 
 			url := fmt.Sprintf("/users/%v", tc.username)
 
@@ -165,7 +165,7 @@ func TestCreateUserAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			recorder := httptest.NewRecorder()
-			server := NewServer(store)
+			server := newTestServer(t, store)
 
 			url := fmt.Sprintf("/users")
 
