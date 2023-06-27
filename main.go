@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/micaelapucciariello/simplebank/api"
+	"github.com/micaelapucciariello/simplebank/api/client"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"log"
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	server := api.NewServer(store)
+	server := client.NewServer(store)
 
 	err = server.Start(cfg.ServerAddress)
 	if err != nil {
