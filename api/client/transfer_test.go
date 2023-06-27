@@ -1,4 +1,4 @@
-package api
+package client
 
 import (
 	"bytes"
@@ -33,7 +33,6 @@ func TestCreateTransferAPI(t *testing.T) {
 		{
 			name: "happy path create transfer",
 			buildStubs: func(store *mockdb.MockStore) {
-				// build stubs
 				store.EXPECT().CreateTransfer(gomock.Any(), gomock.Eq(db.CreateTransferParams{
 					FromAccountID: account1.ID,
 					ToAccountID:   account2.ID,
@@ -51,7 +50,6 @@ func TestCreateTransferAPI(t *testing.T) {
 		{
 			name: "internal server error",
 			buildStubs: func(store *mockdb.MockStore) {
-				// build stubs
 				store.EXPECT().CreateTransfer(gomock.Any(), gomock.Eq(db.CreateTransferParams{
 					FromAccountID: account1.ID,
 					ToAccountID:   account2.ID,

@@ -44,6 +44,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	router.POST("/transfers", s.createTranfer)
 
 	router.POST("/users", s.createUser)
+	router.GET("/users/:username", s.getUser)
 }
 
 // errResponse returns a gin key-value error
