@@ -33,12 +33,12 @@ func (s *Server) createTranfer(ctx *gin.Context) {
 		Amount:        req.Amount,
 	}
 
-	account, err := s.store.TransferTx(ctx, arg)
+	transfer, err := s.store.TransferTx(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	} else {
-		ctx.JSON(http.StatusOK, account)
+		ctx.JSON(http.StatusOK, transfer)
 		return
 	}
 }
