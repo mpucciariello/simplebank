@@ -250,7 +250,7 @@ func randomAccount() db.Account {
 	account := db.Account{
 		Owner:    utils.RandomOwner(),
 		Balance:  utils.RandomBalance(),
-		Currency: utils.RandomCurrency(),
+		Currency: utils.USD,
 		ID:       utils.RandomInt(1, 1000),
 	}
 

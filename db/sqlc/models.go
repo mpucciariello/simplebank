@@ -32,7 +32,7 @@ type Transfer struct {
 }
 
 type User struct {
-	Username          string       `json:"username"`
+	UserName          string       `json:"username"`
 	HashedPassword    string       `json:"hashed_password"`
 	FullName          string       `json:"full_name"`
 	Email             string       `json:"email"`

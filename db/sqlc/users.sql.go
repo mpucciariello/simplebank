@@ -18,7 +18,7 @@ VALUES ($1, $2, $3, $4) RETURNING username, hashed_password, full_name, email, p
 `
 
 type CreateUserParams struct {
-	Username       string `json:"username"`
+	UserName       string `json:"username"`
 	HashedPassword string `json:"hashed_password"`
 	FullName       string `json:"full_name"`
 	Email          string `json:"email"`
@@ -26,14 +26,14 @@ type CreateUserParams struct {
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.queryRow(ctx, q.createUserStmt, createUser,
-		arg.Username,
+		arg.UserName,
 		arg.HashedPassword,
 		arg.FullName,
 		arg.Email,
 	)
 	var i User
 	err := row.Scan(
-		&i.Username,
+		&i.UserName,
 		&i.HashedPassword,
 		&i.FullName,
 		&i.Email,
@@ -64,7 +64,7 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 	row := q.queryRow(ctx, q.getUserStmt, getUser, username)
 	var i User
 	err := row.Scan(
-		&i.Username,
+		&i.UserName,
 		&i.HashedPassword,
 		&i.FullName,
 		&i.Email,
@@ -85,7 +85,7 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, username string) (User, 
 	row := q.queryRow(ctx, q.getUserForUpdateStmt, getUserForUpdate, username)
 	var i User
 	err := row.Scan(
-		&i.Username,
+		&i.UserName,
 		&i.HashedPassword,
 		&i.FullName,
 		&i.Email,
@@ -117,7 +117,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 	for rows.Next() {
 		var i User
 		if err := rows.Scan(
-			&i.Username,
+			&i.UserName,
 			&i.HashedPassword,
 			&i.FullName,
 			&i.Email,
@@ -144,7 +144,7 @@ WHERE username = $1 RETURNING username, hashed_password, full_name, email, passw
 `
 
 type UpdateUserParams struct {
-	Username          string `json:"username"`
+	UserName          string `json:"username"`
 	HashedPassword    string `json:"hashed_password"`
 	PasswordChangedAt string `json:"password_changed_at"`
 	Email             string `json:"email"`
@@ -153,7 +153,7 @@ type UpdateUserParams struct {
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
 	row := q.queryRow(ctx, q.updateUserStmt, updateUser,
-		arg.Username,
+		arg.UserName,
 		arg.HashedPassword,
 		arg.PasswordChangedAt,
 		arg.Email,
@@ -161,7 +161,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	)
 	var i User
 	err := row.Scan(
-		&i.Username,
+		&i.UserName,
 		&i.HashedPassword,
 		&i.FullName,
 		&i.Email,

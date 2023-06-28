@@ -11,20 +11,20 @@ import (
 
 type (
 	createUserReq struct {
-		Username string `json:"username" binding:"required,alphanum"`
+		UserName string `json:"username" binding:"required,alphanum"`
 		Password string `json:"password" binding:"required,min=6"`
 		FullName string `json:"full_name" binding:"required"`
 		Email    string `json:"email" binding:"required,email"`
 	}
 
 	createUserRsp struct {
-		Username string `json:"username"`
+		UserName string `json:"username"`
 		FullName string `json:"full_name"`
 		Email    string `json:"email"`
 	}
 
 	getUserReq struct {
-		Username string `uri:"username" binding:"required,alphanum"`
+		UserName string `uri:"username" binding:"required,alphanum"`
 	}
 
 	loginUserRequest struct {
@@ -40,7 +40,7 @@ type (
 
 func parseUserInfo(user db.User) createUserRsp {
 	return createUserRsp{
-		Username: user.Username,
+		UserName: user.UserName,
 		FullName: user.FullName,
 		Email:    user.Email,
 	}
@@ -58,7 +58,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 	}
 
 	arg := db.CreateUserParams{
-		Username:       req.Username,
+		UserName:       req.UserName,
 		HashedPassword: hashedPassword,
 		FullName:       req.FullName,
 		Email:          req.Email,
@@ -88,7 +88,7 @@ func (s *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := s.store.GetUser(ctx, req.Username)
+	user, err := s.store.GetUser(ctx, req.UserName)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errResponse(err))
@@ -117,7 +117,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
 		rsp := createUserRsp{
-			Username: user.Username,
+			UserName: user.UserName,
 			FullName: user.FullName,
 			Email:    user.Email,
 		}

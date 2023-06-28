@@ -55,6 +55,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	router.POST("/transfers", s.createTranfer)
 
 	router.POST("/users", s.createUser)
+	router.GET("/users/:username", s.getUser)
 	router.POST("/users/login", s.loginUser)
 }
 
