@@ -11,7 +11,7 @@ import (
 
 const _authorizationHeaderKey = "authorization"
 const _authorizationTypeBearer = "Bearer"
-const _authorizationPayloadKey = "authorization_payload"
+const authorizationHeaderKey = "authorization_payload"
 
 func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -43,7 +43,7 @@ func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set(_authorizationPayloadKey, payload)
+		ctx.Set(authorizationHeaderKey, payload)
 		ctx.Next()
 	}
 }

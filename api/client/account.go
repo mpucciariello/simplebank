@@ -2,8 +2,10 @@ package client
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
+	"github.com/micaelapucciariello/simplebank/api/token"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"net/http"
 )
@@ -35,8 +37,9 @@ func (s *Server) createAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errResponse(err))
 	}
 
+	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	arg := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.UserName,
 		Balance:  0,
 		Currency: req.Currency,
 	}
@@ -70,6 +73,12 @@ func (s *Server) getAccount(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+	}
+	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
+	if authPayload.UserName != account.Owner {
+		err = fmt.Errorf("invalid username")
+		ctx.JSON(http.StatusUnauthorized, errResponse(err))
+		return
 	} else {
 		ctx.JSON(http.StatusOK, account)
 	}
@@ -83,7 +92,9 @@ func (s *Server) getAccountsList(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	params := db.ListAccountsParams{
+		Owner:  authPayload.UserName,
 		Limit:  req.PageSize,
 		Offset: req.PageID,
 	}

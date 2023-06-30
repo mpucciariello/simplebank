@@ -47,16 +47,18 @@ func (s *Server) Start(address string) error {
 
 func (s *Server) initRouter(router *gin.Engine) {
 	// declares the api routes and its functions
-	router.POST("/accounts", s.createAccount)
-	router.GET("/accounts/:id", s.getAccount)
-	router.GET("/accounts", s.getAccountsList)
-	router.DELETE("/accounts/:id", s.deleteAccount)
-
-	router.POST("/transfers", s.createTranfer)
-
 	router.POST("/users", s.createUser)
-	router.GET("/users/:username", s.getUser)
 	router.POST("/users/login", s.loginUser)
+
+	authRoutes := router.Group("/", authMiddleware(s.token))
+	authRoutes.GET("/users/:username", s.getUser)
+
+	authRoutes.POST("/accounts", s.createAccount)
+	authRoutes.GET("/accounts/:id", s.getAccount)
+	authRoutes.GET("/accounts", s.getAccountsList)
+	authRoutes.DELETE("/accounts/:id", s.deleteAccount)
+
+	authRoutes.POST("/transfers", s.createTranfer)
 }
 
 // errResponse returns a gin key-value error
