@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang/mock/gomock"
+	"github.com/micaelapucciariello/simplebank/api/token"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	mockdb "github.com/micaelapucciariello/simplebank/db/mock"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
@@ -20,9 +22,12 @@ import (
 const _amount = 112
 
 var (
-	account1   = randomAccount()
-	account2   = randomAccount()
-	accountARS = randomAccount()
+	user1, _   = randomUser()
+	user2, _   = randomUser()
+	userARS, _ = randomUser()
+	account1   = randomAccount(user1.Username)
+	account2   = randomAccount(user2.Username)
+	accountARS = randomAccount(userARS.Username)
 )
 
 func TestCreateTransferAPI(t *testing.T) {
@@ -51,11 +56,15 @@ func TestCreateTransferAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
 			name: "happy path create transfer",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.TransferTxParams{
 					FromAccountID: account1.ID,
@@ -75,6 +84,9 @@ func TestCreateTransferAPI(t *testing.T) {
 		},
 		{
 			name: "internal server error",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), account1.ID).Times(1).Return(account1, nil)
 				store.EXPECT().GetAccount(gomock.Any(), account2.ID).Times(1).Return(account2, nil)
@@ -88,6 +100,9 @@ func TestCreateTransferAPI(t *testing.T) {
 		},
 		{
 			name: "error: mismatched currency",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, userARS.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.TransferTxParams{
 					FromAccountID: accountARS.ID,
@@ -128,6 +143,7 @@ func TestCreateTransferAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bodyReader)
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.token)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
