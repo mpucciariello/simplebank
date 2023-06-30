@@ -38,7 +38,7 @@ func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (
 		return "", err
 	}
 
-	return encrypt, err
+	return encrypt, nil
 }
 
 func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) {
