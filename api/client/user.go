@@ -40,7 +40,7 @@ type (
 
 func parseUserInfo(user db.User) createUserRsp {
 	return createUserRsp{
-		UserName: user.UserName,
+		UserName: user.Username,
 		FullName: user.FullName,
 		Email:    user.Email,
 	}
@@ -58,7 +58,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 	}
 
 	arg := db.CreateUserParams{
-		UserName:       req.UserName,
+		Username:       req.UserName,
 		HashedPassword: hashedPassword,
 		FullName:       req.FullName,
 		Email:          req.Email,
@@ -117,7 +117,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
 		rsp := createUserRsp{
-			UserName: user.UserName,
+			UserName: user.Username,
 			FullName: user.FullName,
 			Email:    user.Email,
 		}

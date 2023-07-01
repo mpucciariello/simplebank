@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/micaelapucciariello/simplebank/api/token"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	mockdb "github.com/micaelapucciariello/simplebank/db/mock"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
@@ -29,16 +31,20 @@ func TestGetUserAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		username      string
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
-			name:     "happy path get user",
-			username: user.UserName,
+			name: "happy path get user",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user.Username, time.Minute)
+			},
+			username: user.Username,
 			buildStubs: func(store *mockdb.MockStore) {
 				// build stubs
-				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.UserName)).
+				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.Username)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -49,11 +55,14 @@ func TestGetUserAPI(t *testing.T) {
 			},
 		},
 		{
-			name:     "user not found",
-			username: user.UserName,
+			name: "user not found",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user.Username, time.Minute)
+			},
+			username: user.Username,
 			buildStubs: func(store *mockdb.MockStore) {
 				// build stubs
-				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.UserName)).
+				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.Username)).
 					Times(1).
 					Return(db.User{}, sql.ErrNoRows)
 			},
@@ -63,11 +72,14 @@ func TestGetUserAPI(t *testing.T) {
 			},
 		},
 		{
-			name:     "internal server error",
-			username: user.UserName,
+			name: "internal server error",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user.Username, time.Minute)
+			},
+			username: user.Username,
 			buildStubs: func(store *mockdb.MockStore) {
 				// build stubs
-				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.UserName)).
+				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.Username)).
 					Times(1).
 					Return(db.User{}, sql.ErrConnDone)
 			},
@@ -96,6 +108,7 @@ func TestGetUserAPI(t *testing.T) {
 			// check request
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.token)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
@@ -107,6 +120,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		user          db.User
 		body          gin.H
 		buildStubs    func(store *mockdb.MockStore)
@@ -114,11 +128,14 @@ func TestCreateUserAPI(t *testing.T) {
 	}{
 		{
 			name: "happy path create user",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user.Username, time.Minute)
+			},
 			user: user,
 			buildStubs: func(store *mockdb.MockStore) {
 				// build stubs
 				arg := db.CreateUserParams{
-					UserName:       user.UserName,
+					Username:       user.Username,
 					FullName:       user.FullName,
 					Email:          user.Email,
 					HashedPassword: user.HashedPassword,
@@ -135,11 +152,14 @@ func TestCreateUserAPI(t *testing.T) {
 		},
 		{
 			name: "internal server error",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user.Username, time.Minute)
+			},
 			user: user,
 			buildStubs: func(store *mockdb.MockStore) {
 				// build stubs
 				arg := db.CreateUserParams{
-					UserName:       user.UserName,
+					Username:       user.Username,
 					FullName:       user.FullName,
 					Email:          user.Email,
 					HashedPassword: user.HashedPassword,
@@ -169,7 +189,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 			url := fmt.Sprintf("/users")
 
-			body := fmt.Sprintf(`{"username": "%v", "full_name": "%v", "email": "%v", "password": "%v"}`, user.UserName, user.FullName, user.Email, password)
+			body := fmt.Sprintf(`{"username": "%v", "full_name": "%v", "email": "%v", "password": "%v"}`, user.Username, user.FullName, user.Email, password)
 			jsonBody := []byte(body)
 			bodyReader := bytes.NewReader(jsonBody)
 
@@ -177,6 +197,7 @@ func TestCreateUserAPI(t *testing.T) {
 			// check request
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.token)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
@@ -187,7 +208,7 @@ func randomUser() (db.User, string) {
 	password := utils.RandomString(10)
 	hashedPassword, _ := utils.HashPassword(password)
 	user := db.User{
-		UserName:       utils.RandomOwner(),
+		Username:       utils.RandomOwner(),
 		HashedPassword: hashedPassword,
 		FullName:       utils.RandomOwner(),
 		Email:          utils.RandomEmail(),
@@ -203,7 +224,7 @@ func validateResponseUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	var rspUser db.User
 	err = json.Unmarshal(data, &rspUser)
 	require.NoError(t, err)
-	require.Equal(t, user.UserName, rspUser.UserName)
+	require.Equal(t, user.Username, rspUser.Username)
 	require.Equal(t, user.Email, rspUser.Email)
 	require.Equal(t, user.FullName, rspUser.FullName)
 }
