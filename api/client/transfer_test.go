@@ -99,6 +99,36 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid username",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, "unauthorized token", time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), account1.ID).Times(1).Return(account1, nil)
+				store.EXPECT().GetAccount(gomock.Any(), account2.ID).Times(1).Return(account2, nil)
+				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(1).
+					Return(db.TransferTxResult{}, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:      "no authorization",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), account1.ID).Times(0).Return(account1, nil)
+				store.EXPECT().GetAccount(gomock.Any(), account2.ID).Times(0).Return(account2, nil)
+				store.EXPECT().TransferTx(gomock.Any(), gomock.Any()).Times(0).
+					Return(db.TransferTxResult{}, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name: "error: mismatched currency",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, userARS.Username, time.Minute)

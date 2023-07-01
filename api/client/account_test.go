@@ -210,6 +210,41 @@ func TestCreateAccountAPI(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
+		{
+			name: "invalid username",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, "invalid username", time.Minute)
+			},
+			account: account,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().CreateAccount(gomock.Any(), gomock.Eq(db.CreateAccountParams{
+					Owner:    account.Owner,
+					Balance:  0,
+					Currency: account.Currency,
+				})).
+					Times(1).
+					Return(account, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:      "no authorization",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {},
+			account:   account,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().CreateAccount(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {
@@ -284,6 +319,37 @@ func TestDeleteAccountAPI(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check response
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "invalid username",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, "invalid username", time.Minute)
+			},
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1).
+					Return(nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:      "no authorization",
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {},
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().CreateAccount(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 	}
