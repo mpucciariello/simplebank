@@ -38,6 +38,10 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	}
 
 	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
+	if authPayload.UserName != req.Owner {
+		ctx.JSON(http.StatusUnauthorized, fmt.Errorf("owner doesn't belong to the authenticated user"))
+		return
+	}
 	arg := db.CreateAccountParams{
 		Owner:    authPayload.UserName,
 		Balance:  0,
@@ -76,7 +80,7 @@ func (s *Server) getAccount(ctx *gin.Context) {
 	}
 	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	if authPayload.UserName != account.Owner {
-		err = fmt.Errorf("invalid username")
+		err = fmt.Errorf("owner doesn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errResponse(err))
 		return
 	} else {
@@ -114,7 +118,22 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	err := s.store.DeleteAccount(ctx, req.ID)
+	account, err := s.store.GetAccount(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+	}
+	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
+	if authPayload.UserName != account.Owner {
+		err = fmt.Errorf("owner doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errResponse(err))
+		return
+	}
+
+	err = s.store.DeleteAccount(ctx, req.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	} else {
