@@ -223,8 +223,7 @@ func TestCreateAccountAPI(t *testing.T) {
 					Balance:  0,
 					Currency: account.Currency,
 				})).
-					Times(1).
-					Return(account, nil)
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check response
@@ -339,8 +338,7 @@ func TestDeleteAccountAPI(t *testing.T) {
 					Times(1).
 					Return(account, nil)
 				store.EXPECT().DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
-					Times(1).
-					Return(nil)
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check response

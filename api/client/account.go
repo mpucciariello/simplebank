@@ -39,7 +39,7 @@ func (s *Server) createAccount(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	if authPayload.UserName != req.Owner {
-		ctx.JSON(http.StatusUnauthorized, fmt.Errorf("error creating account: username doesn't belong to the authenticated account"))
+		ctx.JSON(http.StatusUnauthorized, fmt.Errorf("owner doesn't belong to the authenticated user"))
 		return
 	}
 	arg := db.CreateAccountParams{
@@ -80,7 +80,7 @@ func (s *Server) getAccount(ctx *gin.Context) {
 	}
 	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	if authPayload.UserName != account.Owner {
-		err = fmt.Errorf("invalid username")
+		err = fmt.Errorf("owner doesn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errResponse(err))
 		return
 	} else {
@@ -128,7 +128,7 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 	}
 	authPayload := ctx.MustGet(authorizationHeaderKey).(*token.Payload)
 	if authPayload.UserName != account.Owner {
-		err = fmt.Errorf("invalid username")
+		err = fmt.Errorf("owner doesn't belong to the authenticated user")
 		ctx.JSON(http.StatusUnauthorized, errResponse(err))
 		return
 	}
