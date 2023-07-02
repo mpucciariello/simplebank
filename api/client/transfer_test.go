@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/micaelapucciariello/simplebank/api/token"
 	"github.com/micaelapucciariello/simplebank/utils"
@@ -57,11 +58,18 @@ func TestCreateTransferAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		body          gin.H
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
 			name: "happy path create transfer",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          _amount,
+				"currency":        utils.USD,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user1.Username, time.Minute)
 			},
@@ -84,6 +92,12 @@ func TestCreateTransferAPI(t *testing.T) {
 		},
 		{
 			name: "internal server error",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          _amount,
+				"currency":        utils.USD,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, user1.Username, time.Minute)
 			},
@@ -100,6 +114,12 @@ func TestCreateTransferAPI(t *testing.T) {
 		},
 		{
 			name: "invalid username",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          _amount,
+				"currency":        utils.USD,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, "unauthorized token", time.Minute)
 			},
@@ -115,7 +135,13 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "no authorization",
+			name: "no authorization",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          _amount,
+				"currency":        utils.USD,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), account1.ID).Times(0).Return(account1, nil)
@@ -130,6 +156,12 @@ func TestCreateTransferAPI(t *testing.T) {
 		},
 		{
 			name: "error: mismatched currency",
+			body: gin.H{
+				"from_account_id": accountARS.ID,
+				"to_account_id":   account1.ID,
+				"amount":          _amount,
+				"currency":        utils.ARS,
+			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, _authorizationTypeBearer, userARS.Username, time.Minute)
 			},
@@ -142,7 +174,7 @@ func TestCreateTransferAPI(t *testing.T) {
 
 				store.EXPECT().GetAccount(gomock.Any(), accountARS.ID).Times(1).Return(accountARS, nil)
 				store.EXPECT().GetAccount(gomock.Any(), account1.ID).Times(1).Return(account1, nil)
-				store.EXPECT().TransferTx(gomock.Any(), arg).Times(1).
+				store.EXPECT().TransferTx(gomock.Any(), arg).Times(0).
 					Return(db.TransferTxResult{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -166,11 +198,10 @@ func TestCreateTransferAPI(t *testing.T) {
 
 			url := fmt.Sprintf("/transfers")
 
-			body := fmt.Sprintf(`{"from_account_id": %v, "to_account_id": %v, "amount": %v, "currency": "%v"}`, account1.ID, account2.ID, _amount, utils.USD)
-			jsonBody := []byte(body)
-			bodyReader := bytes.NewReader(jsonBody)
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
 
-			request, err := http.NewRequest(http.MethodPost, url, bodyReader)
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.token)
