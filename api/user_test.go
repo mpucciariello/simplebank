@@ -1,4 +1,4 @@
-package client
+package api
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/micaelapucciariello/simplebank/api/token"
+	"github.com/micaelapucciariello/simplebank/token"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"

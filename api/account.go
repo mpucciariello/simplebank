@@ -1,12 +1,12 @@
-package client
+package api
 
 import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
-	"github.com/micaelapucciariello/simplebank/api/token"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
+	"github.com/micaelapucciariello/simplebank/token"
 	"net/http"
 )
 

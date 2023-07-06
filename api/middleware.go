@@ -1,10 +1,10 @@
-package client
+package api
 
 import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/micaelapucciariello/simplebank/api/token"
+	"github.com/micaelapucciariello/simplebank/token"
 	"net/http"
 	"strings"
 )

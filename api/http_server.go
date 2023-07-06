@@ -1,12 +1,12 @@
-package client
+package api
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/micaelapucciariello/simplebank/api/token"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
+	"github.com/micaelapucciariello/simplebank/token"
 	"github.com/micaelapucciariello/simplebank/utils"
 )
 
@@ -19,13 +19,18 @@ type Server struct {
 
 func NewServer(config utils.Config, store db.Store) (server *Server, err error) {
 	router := gin.Default()
-	token, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token validator: %w", err)
 	}
 
-	server = &Server{store: store, token: token, config: config}
+	server = &Server{
+		store:  store,
+		token:  tokenMaker,
+		config: config,
+	}
 
+	// set currency validator
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err = v.RegisterValidation("currency", validCurrency)
 		if err != nil {
@@ -34,7 +39,6 @@ func NewServer(config utils.Config, store db.Store) (server *Server, err error) 
 	}
 
 	server.initRouter(router)
-
 	server.router = router
 
 	return
