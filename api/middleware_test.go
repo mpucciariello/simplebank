@@ -1,9 +1,9 @@
-package client
+package api
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/micaelapucciariello/simplebank/api/token"
+	"github.com/micaelapucciariello/simplebank/token"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"

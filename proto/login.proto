@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/micaelapucciariello/simplebank/pb";
+
+message  Login {
+  string access_token = 1;
+  string username = 2;
+}
