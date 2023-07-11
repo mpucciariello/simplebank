@@ -204,6 +204,73 @@ func TestCreateUserAPI(t *testing.T) {
 	}
 }
 
+func TestLoginUserAPI(t *testing.T) {
+	user, password := randomUser()
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(*testing.T, *httptest.ResponseRecorder)
+	}{
+		{
+			name: "happy path login user",
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					Times(1).
+					Return(user, nil)
+				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).
+					Times(1) // TODO: use payload
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "internal server error",
+			buildStubs: func(store *mockdb.MockStore) {
+				// build stubs
+				store.EXPECT().GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					Times(1).
+					Return(db.User{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check response
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			recorder := httptest.NewRecorder()
+			server := newTestServer(t, store)
+
+			url := fmt.Sprintf("/users/login")
+
+			body := fmt.Sprintf(`{"username": "%v", "password": "%v"}`, user.Username, password)
+			jsonBody := []byte(body)
+			bodyReader := bytes.NewReader(jsonBody)
+
+			request, err := http.NewRequest(http.MethodPost, url, bodyReader)
+			// check request
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomUser() (db.User, string) {
 	password := utils.RandomString(10)
 	hashedPassword, _ := utils.HashPassword(password)

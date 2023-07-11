@@ -8,7 +8,6 @@ import (
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"net/http"
-	"time"
 )
 
 type (
@@ -35,6 +34,8 @@ type (
 	}
 
 	loginUserResponse struct {
+		SessionID    uuid.UUID     `json:"session_id"`
+		RefreshToken string        `json:"refresh_token"`
 		AccessToken  string        `json:"access_token"`
 		UserMetadata createUserRsp `json:"user_metadata"`
 	}
@@ -132,27 +133,29 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, err := s.token.CreateToken(req.Username, s.config.TokenDuration)
+	accessToken, _, err := s.token.CreateToken(req.Username, s.config.TokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	}
 
-	refreshToken, err := s.token.CreateToken(req.Username, s.config.RefreshTokenDuration)
+	refreshToken, payload, err := s.token.CreateToken(req.Username, s.config.RefreshTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	}
 
-	s.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           uuid.UUID{},
+	session, err := s.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           payload.ID,
 		Username:     req.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
 		IsBlocked:    false,
-		ExpiresAt:    time.Now().Add(s.config.RefreshTokenDuration),
+		ExpiresAt:    sql.NullTime{Time: payload.ExpiredAt},
 	})
 
 	rsp := loginUserResponse{
+		SessionID:    session.ID,
+		RefreshToken: refreshToken,
 		AccessToken:  accessToken,
 		UserMetadata: parseUserInfo(user),
 	}
