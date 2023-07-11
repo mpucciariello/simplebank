@@ -3,10 +3,12 @@ package api
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"net/http"
+	"time"
 )
 
 type (
@@ -134,6 +136,21 @@ func (s *Server) loginUser(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	}
+
+	refreshToken, err := s.token.CreateToken(req.Username, s.config.RefreshTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+	}
+
+	s.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           uuid.UUID{},
+		Username:     req.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    "",
+		ClientIp:     "",
+		IsBlocked:    false,
+		ExpiresAt:    time.Now().Add(s.config.RefreshTokenDuration),
+	})
 
 	rsp := loginUserResponse{
 		AccessToken:  accessToken,
