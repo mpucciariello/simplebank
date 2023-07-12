@@ -8,6 +8,7 @@ import (
 	db "github.com/micaelapucciariello/simplebank/db/sqlc"
 	"github.com/micaelapucciariello/simplebank/utils"
 	"net/http"
+	"time"
 )
 
 type (
@@ -34,10 +35,12 @@ type (
 	}
 
 	loginUserResponse struct {
-		SessionID    uuid.UUID     `json:"session_id"`
-		RefreshToken string        `json:"refresh_token"`
-		AccessToken  string        `json:"access_token"`
-		UserMetadata createUserRsp `json:"user_metadata"`
+		SessionID             uuid.UUID     `json:"session_id"`
+		RefreshToken          string        `json:"refresh_token"`
+		RefreshTokenExpiresAt time.Time     `json:"refresh_token_expires_at"`
+		AccessToken           string        `json:"access_token"`
+		AccessTokenExpiresAt  time.Time     `json:"access_token_expires_at"`
+		UserMetadata          createUserRsp `json:"user_metadata"`
 	}
 )
 
@@ -133,31 +136,33 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, _, err := s.token.CreateToken(req.Username, s.config.TokenDuration)
+	accessToken, accessPayload, err := s.token.CreateToken(req.Username, s.config.TokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	}
 
-	refreshToken, payload, err := s.token.CreateToken(req.Username, s.config.RefreshTokenDuration)
+	refreshToken, refreshPayload, err := s.token.CreateToken(req.Username, s.config.RefreshTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 	}
 
 	session, err := s.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           payload.ID,
+		ID:           refreshPayload.ID,
 		Username:     req.Username,
 		RefreshToken: refreshToken,
 		UserAgent:    ctx.Request.UserAgent(),
 		ClientIp:     ctx.ClientIP(),
 		IsBlocked:    false,
-		ExpiresAt:    sql.NullTime{Time: payload.ExpiredAt},
+		ExpiresAt:    sql.NullTime{Time: refreshPayload.ExpiredAt},
 	})
 
 	rsp := loginUserResponse{
-		SessionID:    session.ID,
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
-		UserMetadata: parseUserInfo(user),
+		SessionID:             session.ID,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		UserMetadata:          parseUserInfo(user),
 	}
 
 	ctx.JSON(http.StatusOK, rsp)
