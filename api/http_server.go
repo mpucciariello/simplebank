@@ -53,6 +53,7 @@ func (s *Server) initRouter(router *gin.Engine) {
 	// declares the api routes and its functions
 	router.POST("/users", s.createUser)
 	router.POST("/users/login", s.loginUser)
+	router.POST("/token/new", s.renewAccessToken)
 
 	authRoutes := router.Group("/", authMiddleware(s.token))
 	authRoutes.GET("/users/:username", s.getUser)
