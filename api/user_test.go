@@ -221,7 +221,7 @@ func TestLoginUserAPI(t *testing.T) {
 					Times(1).
 					Return(user, nil)
 				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).
-					Times(1) // TODO: use payload
+					Times(1)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check response
