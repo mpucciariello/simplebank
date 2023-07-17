@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/micaelapucciariello/simplebank/pb";
+
+message  GetUserRequest {
+  string username = 1;
+}
+
+message GetUserResponse {
+  string username = 1;
+  string full_name = 2;
+  string email = 3;
+}
