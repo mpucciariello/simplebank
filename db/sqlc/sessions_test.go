@@ -49,7 +49,7 @@ func TestGetSession(t *testing.T) {
 	require.Equal(t, s.Username, session.Username)
 	require.Equal(t, s.RefreshToken, session.RefreshToken)
 	require.Equal(t, s.UserAgent, session.UserAgent)
-	require.Equal(t, s.ClientIP, session.ClientIP)
+	require.Equal(t, s.ClientIp, session.ClientIp)
 	require.Equal(t, s.ID, s.ID)
 
 	require.WithinDuration(t, s.CreatedAt.Time, session.CreatedAt.Time, time.Second)

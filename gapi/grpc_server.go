@@ -27,5 +27,6 @@ func NewServer(config utils.Config, store db.Store) (server *Server, err error) 
 		token:  tokenMaker,
 		config: config,
 	}
+
 	return
 }

@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -144,11 +145,11 @@ WHERE username = $1 RETURNING username, hashed_password, full_name, email, passw
 `
 
 type UpdateUserParams struct {
-	Username          string `json:"username"`
-	HashedPassword    string `json:"hashed_password"`
-	PasswordChangedAt string `json:"password_changed_at"`
-	Email             string `json:"email"`
-	FullName          string `json:"full_name"`
+	Username          string    `json:"username"`
+	HashedPassword    string    `json:"hashed_password"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	Email             string    `json:"email"`
+	FullName          string    `json:"full_name"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
