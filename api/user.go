@@ -121,13 +121,6 @@ func (s *Server) loginUser(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
-	} else {
-		rsp := createUserRsp{
-			UserName: user.Username,
-			FullName: user.FullName,
-			Email:    user.Email,
-		}
-		ctx.JSON(http.StatusOK, rsp)
 	}
 
 	err = utils.CheckPassword(req.Password, user.HashedPassword)

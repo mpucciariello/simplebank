@@ -36,7 +36,7 @@ proto:
 		proto/*.proto
 
 evans:
-	evans --host localhost --port 9090 -r repl
+	evans --host localhost --port 9091 -r repl
 
 
 .PHONY: postgres createdb dropdb migrateup migratedown format sqlc test server mock proto evans

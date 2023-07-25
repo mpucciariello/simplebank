@@ -24,7 +24,7 @@ service SimpleBank {
   };
   rpc GetUser (GetUserRequest) returns (GetUserResponse){
     option (google.api.http) = {
-      post: "/v1/login_user"
+      post: "/v1/get_user"
       body: "*"
     };
   };
