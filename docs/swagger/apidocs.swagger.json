@@ -1,8 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "login.proto",
-    "version": "version not set"
+    "title": "SimpleBank API",
+    "version": "1.0",
+    "contact": {
+      "name": "SimpleBank gRPC-Gateway",
+      "url": "https://github.com/micaelapucciariello/simplebank",
+      "email": "none@example.com"
+    }
   },
   "tags": [
     {
