@@ -11,9 +11,10 @@ import (
 )
 
 func createRandomSession(t *testing.T) Session {
+	user := CreateRandomUser(t)
 	args := CreateSessionParams{
 		ID:           uuid.New(),
-		Username:     utils.RandomString(6),
+		Username:     user.Username,
 		RefreshToken: utils.RandomString(32),
 		UserAgent:    utils.RandomString(6),
 		ClientIp:     utils.RandomString(6),
