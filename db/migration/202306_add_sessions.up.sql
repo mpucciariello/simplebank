@@ -9,3 +9,5 @@ CREATE TABLE "sessions"
     "expires_at"    timestamp               DEFAULT (now()),
     "created_at"    timestamp               DEFAULT (now())
 );
+
+ALTER TABLE "sessions" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
