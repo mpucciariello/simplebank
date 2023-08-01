@@ -8,8 +8,10 @@ RUN go build -o main main.go
 FROM alpine:3.17
 WORKDIR /app
 COPY --from=builder /app/main .
+COPY config.env .
 
 EXPOSE 8080
-CMD ["/app/cmd"]
+CMD ["/app/main"]
 
 # docker build -t simplebank:latest .
+# docker run --name simplebank --network bank_network -p 8080:8080 -e DB_SOURCE="postgresql://root:secret@postgres12:5432/simple_bank?sslmode=disable" simplebank:latest
