@@ -41,5 +41,8 @@ proto:
 evans:
 	evans --host localhost --port 9091 -r repl
 
+linter:
+	golangci-lint run ./...
+
 
 .PHONY: postgres createdb dropdb migrateup migratedown format sqlc test server mock proto evans
