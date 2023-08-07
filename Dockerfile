@@ -13,7 +13,7 @@ COPY --from=builder /app/main .
 COPY --from=builder /app/migrate ./migrate
 COPY config.env .
 COPY db/migration ./migration
-COPY start.sh .
+COPY scripts/start.sh .
 
 EXPOSE 8080
 CMD ["/app/main"]
